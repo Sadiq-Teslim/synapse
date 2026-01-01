@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { StorageService } from '@/utils/storageService';
 import { ExerciseSession } from '@/types';
@@ -14,7 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Squares2X2Icon } from '@heroicons/react/24/solid';
 
-export default function SummaryPage() {
+function SummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('id');
@@ -159,5 +159,21 @@ export default function SummaryPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SummaryLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="w-12 h-12 border-4 border-[#0078D4]/20 border-t-[#0078D4] rounded-full animate-spin" />
+    </div>
+  );
+}
+
+export default function SummaryPage() {
+  return (
+    <Suspense fallback={<SummaryLoading />}>
+      <SummaryContent />
+    </Suspense>
   );
 }

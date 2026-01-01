@@ -92,7 +92,7 @@ export class ExerciseAnalyzer {
     let isAtTop = false;
     let isRepDetected = false;
 
-    if (angle !== null && previousAngle !== null) {
+    if (angle !== null && previousAngle != null) {
       // At top: angle is close to target (within 20 degrees) and was increasing
       isAtTop = angle >= this.TARGET_ANGLE - 20 && previousAngle < angle;
 
