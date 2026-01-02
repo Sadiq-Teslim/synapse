@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StorageService } from '@/utils/storageService';
-import { ExerciseSession } from '@/types';
+import { ExerciseSession, UserProfile, DailyCheckIn, AffectedSide } from '@/types';
 import ProgressChart from './ProgressChart';
 import {
   ChartBarIcon,
@@ -18,20 +18,37 @@ import {
   SparklesIcon,
   HeartIcon,
   MoonIcon,
+  UserCircleIcon,
+  CalendarDaysIcon,
+  TrophyIcon,
+  BoltIcon,
+  FaceSmileIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { Squares2X2Icon } from '@heroicons/react/24/solid';
 
-export default function DashboardScreen() {
+interface DashboardScreenProps {
+  userProfile?: UserProfile | null;
+}
+
+export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
   const router = useRouter();
   const [sessions, setSessions] = useState<ExerciseSession[]>([]);
+  const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
 
   useEffect(() => {
     loadSessions();
+    loadTodayCheckIn();
   }, []);
 
   const loadSessions = () => {
     const loadedSessions = StorageService.getSessions();
     setSessions(loadedSessions);
+  };
+
+  const loadTodayCheckIn = () => {
+    const checkIn = StorageService.getTodayCheckIn();
+    setTodayCheckIn(checkIn);
   };
 
   const handleStartExercise = () => {
@@ -45,6 +62,42 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleResetApp = () => {
+    if (confirm('This will clear all data including your profile. Are you sure?')) {
+      StorageService.clearAllData();
+      window.location.reload();
+    }
+  };
+
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getDaysSinceStroke = () => {
+    if (!userProfile?.strokeDate) return null;
+    const strokeDate = new Date(userProfile.strokeDate);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - strokeDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getWeeklyProgress = () => {
+    const weekSessions = StorageService.getThisWeekSessions();
+    const goal = userProfile?.weeklySessionGoal || 5;
+    return { completed: weekSessions.length, goal };
+  };
+
+  const getDailyProgress = () => {
+    const todaySessions = StorageService.getTodaySessions();
+    const totalMinutes = todaySessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 60;
+    const goal = userProfile?.dailyExerciseGoal || 15;
+    return { completed: Math.round(totalMinutes), goal };
+  };
+
   const totalReps = sessions.reduce((sum, session) => sum + session.repsCompleted, 0);
   const avgFormScore = sessions.length > 0
     ? sessions.reduce((sum, session) => {
@@ -53,6 +106,10 @@ export default function DashboardScreen() {
       }, 0) / sessions.length
     : 0;
   const totalMinutes = sessions.reduce((sum, session) => sum + session.durationSeconds, 0) / 60;
+
+  const weeklyProgress = getWeeklyProgress();
+  const dailyProgress = getDailyProgress();
+  const daysSinceStroke = getDaysSinceStroke();
 
   const stats = [
     { 
@@ -85,23 +142,40 @@ export default function DashboardScreen() {
     },
   ];
 
-  const tips = [
-    { 
+  const moodLabels = ['Very Low', 'Low', 'Okay', 'Good', 'Great'];
+  const moodEmojis = ['😢', '😔', '😐', '🙂', '😊'];
+
+  const getPersonalizedTips = () => {
+    const tips = [];
+    
+    if (userProfile?.affectedSide === AffectedSide.LEFT) {
+      tips.push({ 
+        title: 'Focus on Left Side', 
+        desc: 'Your exercises are optimized for left-side recovery. Take extra care with positioning.',
+        icon: HeartIcon
+      });
+    } else if (userProfile?.affectedSide === AffectedSide.RIGHT) {
+      tips.push({ 
+        title: 'Focus on Right Side', 
+        desc: 'Your exercises are optimized for right-side recovery. Take extra care with positioning.',
+        icon: HeartIcon
+      });
+    }
+
+    tips.push({ 
       title: 'Consistency', 
-      desc: 'Practice daily for best results. Even 5-10 minutes helps.',
+      desc: 'Practice daily for best results. Even 5-10 minutes helps rebuild neural pathways.',
       icon: SparklesIcon
-    },
-    { 
-      title: 'Proper Form', 
-      desc: 'Focus on quality over quantity. Good form builds better habits.',
-      icon: HeartIcon
-    },
-    { 
+    });
+
+    tips.push({ 
       title: 'Rest & Recovery', 
       desc: 'Allow time for rest. Your brain heals during sleep.',
       icon: MoonIcon
-    },
-  ];
+    });
+
+    return tips.slice(0, 3);
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -132,33 +206,128 @@ export default function DashboardScreen() {
                 >
                   <ArrowPathIcon className="w-5 h-5 text-gray-600" />
                 </button>
+                <button
+                  onClick={handleResetApp}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Settings"
+                >
+                  <Cog6ToothIcon className="w-5 h-5 text-gray-600" />
+                </button>
               </div>
             </div>
           </div>
         </header>
 
         <main className="max-w-7xl mx-auto px-6 py-8">
-          {/* Welcome Section */}
+          {/* Personalized Welcome Section */}
           <div className="mb-8 animate-fade-in-up">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h2>
-            <p className="text-gray-600">Track your progress and continue your recovery journey.</p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#5C2D91] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                {userProfile?.firstName?.charAt(0) || 'U'}
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  {getTimeGreeting()}, {userProfile?.firstName || 'there'}!
+                </h2>
+                <p className="text-gray-600">
+                  {daysSinceStroke 
+                    ? `Day ${daysSinceStroke} of your recovery journey` 
+                    : 'Continue your recovery journey today'}
+                </p>
+              </div>
+            </div>
+
+            {/* Today's Check-in Status */}
+            {todayCheckIn && (
+              <div className="flex items-center gap-6 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <FaceSmileIcon className="w-5 h-5 text-[#0078D4]" />
+                  <span className="text-sm text-gray-600">Mood:</span>
+                  <span className="text-lg">{moodEmojis[todayCheckIn.mood - 1]}</span>
+                  <span className="text-sm font-medium text-gray-700">{moodLabels[todayCheckIn.mood - 1]}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <HeartIcon className="w-5 h-5 text-[#E74856]" />
+                  <span className="text-sm text-gray-600">Pain:</span>
+                  <span className="text-sm font-medium text-gray-700">{todayCheckIn.painLevel}/10</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BoltIcon className="w-5 h-5 text-[#FFB900]" />
+                  <span className="text-sm text-gray-600">Energy:</span>
+                  <span className="text-sm font-medium text-gray-700">{['Low', 'Low', 'Medium', 'High', 'High'][todayCheckIn.energyLevel - 1]}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Goals Progress */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {/* Daily Goal */}
+            <div className="ms-card p-6 animate-fade-in-up">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <CalendarDaysIcon className="w-5 h-5 text-[#0078D4]" />
+                  <h3 className="font-semibold text-gray-900">Today&apos;s Goal</h3>
+                </div>
+                <span className="text-sm text-gray-500">{dailyProgress.completed}/{dailyProgress.goal} min</span>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#0078D4] to-[#00BCF2] rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min((dailyProgress.completed / dailyProgress.goal) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                {dailyProgress.completed >= dailyProgress.goal 
+                  ? '🎉 Daily goal achieved!' 
+                  : `${dailyProgress.goal - dailyProgress.completed} minutes to go`}
+              </p>
+            </div>
+
+            {/* Weekly Goal */}
+            <div className="ms-card p-6 animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <TrophyIcon className="w-5 h-5 text-[#FFB900]" />
+                  <h3 className="font-semibold text-gray-900">Weekly Goal</h3>
+                </div>
+                <span className="text-sm text-gray-500">{weeklyProgress.completed}/{weeklyProgress.goal} sessions</span>
+              </div>
+              <div className="flex gap-1">
+                {Array.from({ length: weeklyProgress.goal }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className={`flex-1 h-3 rounded-full ${
+                      i < weeklyProgress.completed 
+                        ? 'bg-gradient-to-r from-[#FFB900] to-[#FF8C00]' 
+                        : 'bg-gray-100'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {weeklyProgress.completed >= weeklyProgress.goal 
+                  ? '🏆 Weekly goal achieved!' 
+                  : `${weeklyProgress.goal - weeklyProgress.completed} sessions left this week`}
+              </p>
+            </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {stats.map((stat, index) => (
               <div
                 key={stat.label}
-                className="ms-card p-6 animate-fade-in-up hover:scale-[1.02] transition-transform cursor-default"
-                style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
+                className="ms-card p-5 animate-fade-in-up hover:scale-[1.02] transition-transform cursor-default"
+                style={{ animationDelay: `${0.2 + index * 0.1}s`, opacity: 0 }}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-xs font-medium text-gray-500 mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                   </div>
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
-                    <stat.icon className="w-6 h-6 text-white" />
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}>
+                    <stat.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
               </div>
@@ -171,8 +340,19 @@ export default function DashboardScreen() {
               <div className="text-center md:text-left">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Ready for your next session?</h3>
                 <p className="text-gray-600 max-w-md">
-                  Continue building neural pathways with AI-guided shoulder exercises.
+                  {userProfile?.affectedSide 
+                    ? `Continue building neural pathways for your ${userProfile.affectedSide} side recovery.`
+                    : 'Continue building neural pathways with AI-guided shoulder exercises.'}
                 </p>
+                {userProfile?.recoveryGoals && userProfile.recoveryGoals.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {userProfile.recoveryGoals.slice(0, 3).map((goal) => (
+                      <span key={goal} className="px-3 py-1 bg-[#0078D4]/10 text-[#0078D4] text-xs font-medium rounded-full">
+                        {goal}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleStartExercise}
@@ -267,14 +447,14 @@ export default function DashboardScreen() {
             </div>
           </div>
 
-          {/* Tips Section */}
+          {/* Personalized Tips Section */}
           <div className="ms-card p-6 animate-fade-in-up" style={{ opacity: 0, animationDelay: '0.7s' }}>
             <div className="flex items-center gap-2 mb-4">
               <LightBulbIcon className="w-5 h-5 text-amber-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Recovery Tips</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Recovery Tips for You</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {tips.map((tip) => (
+              {getPersonalizedTips().map((tip) => (
                 <div key={tip.title} className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                   <div className="flex items-center gap-2 mb-2">
                     <tip.icon className="w-5 h-5 text-blue-600" />
@@ -285,6 +465,34 @@ export default function DashboardScreen() {
               ))}
             </div>
           </div>
+
+          {/* User Profile Summary */}
+          {userProfile && (
+            <div className="ms-card p-6 mt-8 animate-fade-in-up" style={{ opacity: 0, animationDelay: '0.8s' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <UserCircleIcon className="w-5 h-5 text-[#0078D4]" />
+                <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Affected Side</p>
+                  <p className="font-medium text-gray-900 capitalize">{userProfile.affectedSide} Side</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Severity</p>
+                  <p className="font-medium text-gray-900 capitalize">{userProfile.severity}</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Daily Goal</p>
+                  <p className="font-medium text-gray-900">{userProfile.dailyExerciseGoal} min</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Weekly Goal</p>
+                  <p className="font-medium text-gray-900">{userProfile.weeklySessionGoal} sessions</p>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Footer */}
