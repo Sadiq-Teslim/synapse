@@ -60,7 +60,7 @@ export default function DailyCheckInScreen({ userName, onComplete }: DailyCheckI
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+      <div className="absolute inset-0 bg-[#0078D4]" />
       
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -205,7 +205,7 @@ export default function DailyCheckInScreen({ userName, onComplete }: DailyCheckI
             {/* Submit */}
             <button
               onClick={handleSubmit}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white rounded-xl hover:opacity-90 transition-all font-medium"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#0078D4] text-white rounded-xl hover:bg-[#106EBE] transition-all font-medium"
             >
               <span>Continue to Dashboard</span>
               <ArrowRightIcon className="w-5 h-5" />
@@ -224,4 +224,6 @@ export default function DailyCheckInScreen({ userName, onComplete }: DailyCheckI
     </div>
   );
 }
+
+
 

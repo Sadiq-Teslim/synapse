@@ -180,8 +180,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
   return (
     <div className="min-h-screen relative">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/40 via-transparent to-transparent" />
+      <div className="fixed inset-0 bg-white" />
 
       {/* Content */}
       <div className="relative z-10">
@@ -190,7 +189,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0078D4] to-[#00BCF2] flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-[#0078D4] flex items-center justify-center shadow-lg">
                   <SparklesIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -222,7 +221,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
           {/* Personalized Welcome Section */}
           <div className="mb-8 animate-fade-in-up">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#5C2D91] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              <div className="w-16 h-16 rounded-2xl bg-[#0078D4] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                 {userProfile?.firstName?.charAt(0) || 'U'}
               </div>
               <div>
@@ -274,7 +273,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
               <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
                 <div 
                   className="h-full bg-gradient-to-r from-[#0078D4] to-[#00BCF2] rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min((dailyProgress.completed / dailyProgress.goal) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((dailyProgress.completed / dailyProgress.goal) * 100, 100)}%`, background: '#0078D4' }}
                 />
               </div>
               <p className="text-xs text-gray-500">
@@ -299,7 +298,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
                     key={i}
                     className={`flex-1 h-3 rounded-full ${
                       i < weeklyProgress.completed 
-                        ? 'bg-gradient-to-r from-[#FFB900] to-[#FF8C00]' 
+                        ? 'bg-[#0078D4]' 
                         : 'bg-gray-100'
                     }`}
                   />
@@ -326,7 +325,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
                     <p className="text-xs font-medium text-gray-500 mb-1">{stat.label}</p>
                     <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                   </div>
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}>
+                  <div className="w-10 h-10 rounded-xl bg-[#0078D4] flex items-center justify-center shadow-md">
                     <stat.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -354,13 +353,22 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
                   </div>
                 )}
               </div>
-              <button
-                onClick={handleStartExercise}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-100"
-              >
-                <PlayIcon className="w-6 h-6" />
-                <span>Start Exercise</span>
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => router.push('/memories')}
+                  className="group relative inline-flex items-center gap-3 px-6 py-4 bg-white border-2 border-[#0078D4] text-[#0078D4] font-semibold rounded-xl hover:bg-blue-50 transition-all duration-300"
+                >
+                  <SparklesIcon className="w-5 h-5" />
+                  <span>Memory Worlds</span>
+                </button>
+                <button
+                  onClick={handleStartExercise}
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#0078D4] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-[#106EBE] transition-all duration-300 hover:scale-105 active:scale-100"
+                >
+                  <PlayIcon className="w-6 h-6" />
+                  <span>Start Exercise</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -410,10 +418,10 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm ${
                           session.overallForm === 'excellent'
-                            ? 'bg-gradient-to-br from-green-400 to-green-600'
+                            ? 'bg-[#0078D4]'
                             : session.overallForm === 'good'
-                            ? 'bg-gradient-to-br from-amber-400 to-amber-600'
-                            : 'bg-gradient-to-br from-red-400 to-red-600'
+                            ? 'bg-[#0078D4]'
+                            : 'bg-[#0078D4]'
                         }`}>
                           {session.repsCompleted}
                         </div>
@@ -455,7 +463,7 @@ export default function DashboardScreen({ userProfile }: DashboardScreenProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {getPersonalizedTips().map((tip) => (
-                <div key={tip.title} className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                <div key={tip.title} className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                   <div className="flex items-center gap-2 mb-2">
                     <tip.icon className="w-5 h-5 text-blue-600" />
                     <h4 className="font-semibold text-gray-900">{tip.title}</h4>

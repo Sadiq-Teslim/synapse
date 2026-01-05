@@ -20,12 +20,15 @@ import {
   HandRaisedIcon,
 } from '@heroicons/react/24/outline';
 import { Squares2X2Icon } from '@heroicons/react/24/solid';
+import MemoryUpload from './MemoryUpload';
+import { Memory } from '@/types/memory';
+import { MemoryStorage } from '@/utils/memoryStorage';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
 }
 
-type OnboardingStep = 'welcome' | 'personal' | 'stroke' | 'mobility' | 'goals' | 'complete';
+type OnboardingStep = 'welcome' | 'personal' | 'stroke' | 'mobility' | 'goals' | 'memory' | 'complete';
 
 export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const [step, setStep] = useState<OnboardingStep>('welcome');
@@ -59,7 +62,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     );
   };
 
-  const handleComplete = () => {
+  const handleProfileComplete = () => {
     const profile: UserProfile = {
       id: uuidv4(),
       firstName,
@@ -85,8 +88,19 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     }, 2000);
   };
 
+  const handleMemoryComplete = (memory?: Memory) => {
+    if (memory) {
+      MemoryStorage.saveMemory(memory);
+    }
+    nextStep();
+  };
+
+  const handleMemorySkip = () => {
+    nextStep();
+  };
+
   const nextStep = () => {
-    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals', 'complete'];
+    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals', 'memory', 'complete'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
       setStep(steps[currentIndex + 1]);
@@ -94,7 +108,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   };
 
   const prevStep = () => {
-    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals', 'complete'];
+    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals', 'memory', 'complete'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       setStep(steps[currentIndex - 1]);
@@ -102,7 +116,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   };
 
   const getStepNumber = () => {
-    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals'];
+    const steps: OnboardingStep[] = ['welcome', 'personal', 'stroke', 'mobility', 'goals', 'memory'];
     return steps.indexOf(step);
   };
 
@@ -129,7 +143,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (step === 'welcome') {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+        <div className="absolute inset-0 bg-[#0078D4]" />
         
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -186,14 +200,14 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (step === 'personal') {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+        <div className="absolute inset-0 bg-[#0078D4]" />
         {renderProgressBar()}
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
           <div className="max-w-lg w-full">
             <div className="fluent-card bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#00BCF2] flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0078D4] flex items-center justify-center">
                   <UserIcon className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -237,7 +251,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                 <button
                   onClick={nextStep}
                   disabled={!firstName.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-[#0078D4] text-white rounded-xl hover:bg-[#106EBE] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Continue</span>
                   <ArrowRightIcon className="w-5 h-5" />
@@ -254,14 +268,14 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (step === 'stroke') {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+        <div className="absolute inset-0 bg-[#0078D4]" />
         {renderProgressBar()}
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
           <div className="max-w-lg w-full">
             <div className="fluent-card bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#E74856] to-[#FF8C00] flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0078D4] flex items-center justify-center">
                   <HeartIcon className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -352,7 +366,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                 </button>
                 <button
                   onClick={nextStep}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white rounded-xl hover:opacity-90 transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-[#0078D4] text-white rounded-xl hover:bg-[#106EBE] transition-all"
                 >
                   <span>Continue</span>
                   <ArrowRightIcon className="w-5 h-5" />
@@ -369,14 +383,14 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (step === 'mobility') {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+        <div className="absolute inset-0 bg-[#0078D4]" />
         {renderProgressBar()}
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
           <div className="max-w-lg w-full">
             <div className="fluent-card bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00CC6A] to-[#10893E] flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0078D4] flex items-center justify-center">
                   <HandRaisedIcon className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -422,7 +436,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                 </button>
                 <button
                   onClick={nextStep}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white rounded-xl hover:opacity-90 transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-[#0078D4] text-white rounded-xl hover:bg-[#106EBE] transition-all"
                 >
                   <span>Continue</span>
                   <ArrowRightIcon className="w-5 h-5" />
@@ -439,14 +453,14 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (step === 'goals') {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+        <div className="absolute inset-0 bg-[#0078D4]" />
         {renderProgressBar()}
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
           <div className="max-w-lg w-full">
             <div className="fluent-card bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFB900] to-[#FF8C00] flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0078D4] flex items-center justify-center">
                   <SparklesIcon className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -524,11 +538,11 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                   <span>Back</span>
                 </button>
                 <button
-                  onClick={handleComplete}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#0078D4] to-[#00BCF2] text-white rounded-xl hover:opacity-90 transition-all"
+                  onClick={nextStep}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-[#0078D4] text-white rounded-xl hover:bg-[#106EBE] transition-all"
                 >
-                  <span>Complete Setup</span>
-                  <CheckCircleIcon className="w-5 h-5" />
+                  <span>Continue</span>
+                  <ArrowRightIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -538,10 +552,20 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     );
   }
 
+  // Memory Step
+  if (step === 'memory') {
+    return (
+      <MemoryUpload 
+        onComplete={handleMemoryComplete}
+        onSkip={handleMemorySkip}
+      />
+    );
+  }
+
   // Complete Step
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#00CC6A] via-[#10893E] to-[#0078D4]" />
+      <div className="absolute inset-0 bg-[#0078D4]" />
       
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -576,4 +600,6 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     </div>
   );
 }
+
+
 

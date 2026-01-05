@@ -56,7 +56,7 @@ html {
 
 body {
   font-family: var(--font-primary);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0078D4;
   min-height: 100vh;
   color: var(--ms-gray-190);
   -webkit-font-smoothing: antialiased;
@@ -245,7 +245,7 @@ body {
 
 .ms-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--ms-blue) 0%, var(--ms-blue-light) 100%);
+  background: var(--ms-blue);
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -283,17 +283,19 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.gradient-microsoft {
-  background: linear-gradient(135deg, #0078D4 0%, #5C2D91 50%, #D13438 100%);
+/* Blue-only branding - no gradients */
+.bg-brand {
+  background: #0078D4;
 }
 
-.gradient-azure {
-  background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
+.bg-brand-dark {
+  background: #106EBE;
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.bg-brand-light {
+  background: #2B88D8;
+}
+
+.text-brand {
+  color: #0078D4;
 }

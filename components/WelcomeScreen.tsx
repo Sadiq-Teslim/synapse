@@ -16,8 +16,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background with Microsoft-inspired gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]" />
+      {/* Background - solid blue branding */}
+      <div className="absolute inset-0 bg-[#0078D4]" />
       
       {/* Animated background shapes */}
       <div className="absolute inset-0 overflow-hidden">

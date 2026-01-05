@@ -50,7 +50,7 @@ export default function Home() {
   // Loading state with nice animation
   if (appState === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0078D4] via-[#5C2D91] to-[#00BCF2]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0078D4]">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-xl mb-4 animate-pulse">
             <SparklesIcon className="w-10 h-10 text-white" />

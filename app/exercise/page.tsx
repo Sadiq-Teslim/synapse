@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { PoseDetectionService } from '@/utils/poseDetection';
 import { ExerciseAnalyzer } from '@/utils/exerciseAnalyzer';
 import { StorageService } from '@/utils/storageService';
+import { MemoryStorage } from '@/utils/memoryStorage';
+import { BioController } from '@/utils/bioController';
 import { PoseResult, FormQuality, ExerciseSession } from '@/types';
+import { Memory, WorldConfig } from '@/types/memory';
 import PoseOverlay from '@/components/PoseOverlay';
 import FeedbackIndicator from '@/components/FeedbackIndicator';
+import World3D from '@/components/World3D';
 import {
   PlayIcon,
   PauseIcon,
@@ -19,7 +23,9 @@ import {
 
 const TARGET_REPS = 10;
 
-export default function ExercisePage() {
+function ExercisePageContent() {
+  const searchParams = useSearchParams();
+  const memoryId = searchParams.get('memory');
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const poseServiceRef = useRef<PoseDetectionService | null>(null);
@@ -39,6 +45,36 @@ export default function ExercisePage() {
   const [isPaused, setIsPaused] = useState(false);
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 });
   const [cameraError, setCameraError] = useState<string | null>(null);
+  
+  // 3D World state
+  const [memory, setMemory] = useState<Memory | null>(null);
+  const [worldConfig, setWorldConfig] = useState<WorldConfig | null>(null);
+  const [is3DMode, setIs3DMode] = useState(false);
+  const bioControllerRef = useRef<BioController | null>(null);
+
+  // Load memory if memoryId is provided
+  useEffect(() => {
+    if (memoryId) {
+      const loadedMemory = MemoryStorage.getMemory(memoryId);
+      if (loadedMemory) {
+        setMemory(loadedMemory);
+        setIs3DMode(true);
+        
+        // Create world config from memory
+        if (loadedMemory.worldUrl) {
+          setWorldConfig({
+            memoryId: loadedMemory.id,
+            type: 'panorama',
+            url: loadedMemory.worldUrl,
+            initialPosition: { x: 0, y: 0, z: 0 },
+          });
+        }
+        
+        // Initialize bio-controller
+        bioControllerRef.current = new BioController();
+      }
+    }
+  }, [memoryId]);
 
   const processPose = useCallback((pose: PoseResult) => {
     setCurrentPose(pose);
@@ -86,7 +122,23 @@ export default function ExercisePage() {
         finishSession(repsRef.current);
       }
     }
-  }, []);
+
+    // Process 3D world movement if in 3D mode
+    if (is3DMode && bioControllerRef.current && videoRef.current) {
+      const bioResult = bioControllerRef.current.processPose(
+        pose,
+        videoRef.current.videoWidth,
+        videoRef.current.videoHeight
+      );
+      
+      if (bioResult.moved) {
+        setFeedbackMessage('Moving forward in your memory...');
+      }
+      if (bioResult.rotated) {
+        setFeedbackMessage('Looking around...');
+      }
+    }
+  }, [is3DMode]);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -275,27 +327,54 @@ export default function ExercisePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Video Container */}
+    <div className="min-h-screen bg-slate-900 relative overflow-hidden">
+      {/* 3D World or Video Container */}
       <div className="relative w-full h-screen flex items-center justify-center">
-        <div className="relative w-full h-full max-w-5xl flex items-center justify-center">
-          <video
-            ref={videoRef}
-            className="max-w-full max-h-full object-contain rounded-lg"
-            playsInline
-            muted
-            autoPlay
-            style={{ transform: 'scaleX(-1)' }}
-          />
-          {currentPose && (
-            <PoseOverlay
-              pose={currentPose}
-              formQuality={formQuality}
-              canvasWidth={videoDimensions.width}
-              canvasHeight={videoDimensions.height}
+        {is3DMode && worldConfig ? (
+          // 3D World View
+          <div className="absolute inset-0 w-full h-full">
+            <World3D config={worldConfig} />
+            {/* Small video overlay for pose detection */}
+            <div className="absolute bottom-4 right-4 w-48 h-36 rounded-lg overflow-hidden border-2 border-white/20 shadow-2xl">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                playsInline
+                muted
+                autoPlay
+                style={{ transform: 'scaleX(-1)' }}
+              />
+              {currentPose && (
+                <PoseOverlay
+                  pose={currentPose}
+                  formQuality={formQuality}
+                  canvasWidth={192}
+                  canvasHeight={144}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          // Standard Video View
+          <div className="relative w-full h-full max-w-5xl flex items-center justify-center">
+            <video
+              ref={videoRef}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              playsInline
+              muted
+              autoPlay
+              style={{ transform: 'scaleX(-1)' }}
             />
-          )}
-        </div>
+            {currentPose && (
+              <PoseOverlay
+                pose={currentPose}
+                formQuality={formQuality}
+                canvasWidth={videoDimensions.width}
+                canvasHeight={videoDimensions.height}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Top UI Overlay */}
@@ -331,8 +410,8 @@ export default function ExercisePage() {
                       />
                       <defs>
                         <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#00BCF2" />
-                          <stop offset="100%" stopColor="#0078D4" />
+                          <stop offset="0%" stopColor="#0078D4" />
+                          <stop offset="100%" stopColor="#106EBE" />
                         </linearGradient>
                       </defs>
                     </svg>
@@ -393,7 +472,7 @@ export default function ExercisePage() {
             {/* End Session Button */}
             <button
               onClick={handleEndSession}
-              className="h-16 px-8 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 shadow-lg"
+              className="h-16 px-8 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 shadow-lg"
             >
               <StopIcon className="w-6 h-6" />
               <span>End Session</span>
@@ -404,7 +483,7 @@ export default function ExercisePage() {
           <div className="mt-6 max-w-md mx-auto pointer-events-auto">
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#00BCF2] to-[#0078D4] rounded-full transition-all duration-500"
+                className="h-full bg-[#0078D4] rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -415,5 +494,13 @@ export default function ExercisePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ExercisePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0078D4] text-white">Loading...</div>}>
+      <ExercisePageContent />
+    </Suspense>
   );
 }
